@@ -28,6 +28,8 @@
 
 #include <QObject>
 
+#include "dpointer.h"
+
 extern "C" {
 #include "unqlite/unqlite.h"
 }
@@ -63,8 +65,14 @@ public:
 
     bool isValid() const;
 
+    void operator ++();
+
 private:
-    Q_DECLARE_PRIVATE(QUnQLiteCursor)
+    D_POINTER
+
+    friend void operator ++(QUnQLiteCursor &cursor);
 };
+
+void operator ++(QUnQLiteCursor &cursor);
 
 #endif // QUNQLITECURSOR_H

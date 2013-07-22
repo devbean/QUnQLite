@@ -23,31 +23,69 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef QUNQLITECURSOR_P_H
-#define QUNQLITECURSOR_P_H
+#ifndef DPOINTER_H
+#define DPOINTER_H
 
-#include <QObject>
-
-#include "qunqlitecursor.h"
-
-class QUnQLiteCursorPrivate : public QObject
+template <typename T>
+class DPointer
 {
-    Q_OBJECT
 public:
-    QUnQLiteCursorPrivate(QUnQLiteCursor * parent) :
-        q_ptr(parent)
+    DPointer() : d(new T()) {}
+
+    /*
+     * We can implement by variadic templates,
+     * but some compilers, such as VC11 does not
+     * support it yet. So we have to add these ugly
+     * override constructors.
+     *
+     * template <typename T>
+     * template <typename ...Args>
+     * DPointer<T>::DPointer(Args && ... args)
+     *     : d(new T(std::forward<Args>(args)... ))
+     * {
+     * }
+     */
+
+    template <typename Arg1>
+    DPointer(Arg1 && arg1) : d(new T(arg1))
     {
     }
 
-    void setResultCode(int rc);
-    bool isSuccess() const;
+    template <typename Arg1, typename Arg2>
+    DPointer(Arg1 && arg1, Arg2 && arg2)
+        : d(new T(arg1, arg2))
+    {
+    }
 
-    QUnQLite *q_unqlite;
-    unqlite *db;
-    unqlite_kv_cursor *cursor;
+    template <typename Arg1, typename Arg2, typename Arg3>
+    DPointer(Arg1 && arg1, Arg2 && arg2, Arg3 && arg3)
+        : d(new T(arg1, arg2, arg3))
+    {
+    }
 
-    QUnQLiteCursor * const q_ptr;
-    Q_DECLARE_PUBLIC(QUnQLiteCursor)
-};
+    ~DPointer() {}
 
-#endif // QUNQLITECURSOR_P_H
+    T * operator->() const
+    {
+        return d.data();
+    }
+
+    T * get() const
+    {
+        return d.data();
+    }
+
+private:
+    QScopedPointer<T> d;
+}; // end of class GOW::DPointer
+
+#define D_POINTER                   \
+    class Private;                  \
+    friend class Private;           \
+    const DPointer<Private> d; \
+
+#define Q_POINTER(CLASS)            \
+    friend class CLASS;             \
+    CLASS * const q;
+
+#endif // DPOINTER_H

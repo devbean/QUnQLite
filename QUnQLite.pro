@@ -14,6 +14,7 @@ SOURCES += \
 HEADERS  += \
     UnQLite/unqlite.h \
     qunqlite.h \
-    qunqlite_p.h \
     qunqlitecursor.h \
-    qunqlitecursor_p.h
+    dpointer.h
+
+CONFIG += c++11

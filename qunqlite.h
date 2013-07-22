@@ -28,13 +28,14 @@
 
 #include <QObject>
 
+#include "dpointer.h"
+
 extern "C" {
 #include "UnQLite/UnQLite.h"
 }
 
 class QUnQLiteCursor;
 class QUnQLiteCursorPrivate;
-class QUnQLitePrivate;
 
 class QUnQLite : public QObject
 {
@@ -101,7 +102,8 @@ public:
 private:
     friend class QUnQLiteCursor;
     friend class QUnQLiteCursorPrivate;
-    Q_DECLARE_PRIVATE(QUnQLite)
+
+    D_POINTER
 };
 
 #endif // QUNQLITE_H

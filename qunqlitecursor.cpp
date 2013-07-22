@@ -24,9 +24,30 @@
  */
 
 #include "qunqlite.h"
-#include "qunqlite_p.h"
 #include "qunqlitecursor.h"
-#include "qunqlitecursor_p.h"
+#include "qunqlite.cpp"
+
+class QUnQLiteCursor::Private
+{
+public:
+    Private(QUnQLiteCursor * q_ptr) : q(q_ptr) {}
+
+    void setResultCode(int rc)
+    {
+        q_unqlite->d->setResultCode(rc);
+    }
+
+    bool isSuccess() const
+    {
+        return q_unqlite->d->isSuccess();
+    }
+
+    QUnQLite *q_unqlite;
+    unqlite *db;
+    unqlite_kv_cursor *cursor;
+
+    Q_POINTER(QUnQLiteCursor)
+};
 
 /*!
  * \class QUnQLiteCursor
@@ -42,12 +63,11 @@
  *
  * This function is rarely called, use \c QUnQLite::cursor() instead.
  */
-QUnQLiteCursor::QUnQLiteCursor(QUnQLite *db)
+QUnQLiteCursor::QUnQLiteCursor(QUnQLite *db) :
+    d(this)
 {
-    Q_D(QUnQLiteCursor);
-
     d->q_unqlite = db;
-    d->db = db->d_func()->db;
+    d->db = db->d->db;
     d->setResultCode(unqlite_kv_cursor_init(d->db, &d->cursor));
 }
 
@@ -56,7 +76,6 @@ QUnQLiteCursor::QUnQLiteCursor(QUnQLite *db)
  */
 QUnQLiteCursor::~QUnQLiteCursor()
 {
-    Q_D(QUnQLiteCursor);
     d->setResultCode(unqlite_kv_cursor_release(d->db, d->cursor));
 }
 
@@ -66,7 +85,6 @@ QUnQLiteCursor::~QUnQLiteCursor()
  */
 bool QUnQLiteCursor::reset()
 {
-    Q_D(QUnQLiteCursor);
     d->setResultCode(unqlite_kv_cursor_reset(d->cursor));
     return d->isSuccess();
 }
@@ -85,7 +103,6 @@ bool QUnQLiteCursor::reset()
  */
 bool QUnQLiteCursor::seek(const QString &key, QUnQLiteCursor::SeekDirection sd)
 {
-    Q_D(QUnQLiteCursor);
     d->setResultCode(unqlite_kv_cursor_seek(d->cursor,
                                             key.toUtf8().constData(), key.size(),
                                             sd));
@@ -98,7 +115,6 @@ bool QUnQLiteCursor::seek(const QString &key, QUnQLiteCursor::SeekDirection sd)
  */
 bool QUnQLiteCursor::first()
 {
-    Q_D(QUnQLiteCursor);
     d->setResultCode(unqlite_kv_cursor_first_entry(d->cursor));
     return d->isSuccess();
 }
@@ -109,7 +125,6 @@ bool QUnQLiteCursor::first()
  */
 bool QUnQLiteCursor::last()
 {
-    Q_D(QUnQLiteCursor);
     d->setResultCode(unqlite_kv_cursor_last_entry(d->cursor));
     return d->isSuccess();
 }
@@ -120,7 +135,6 @@ bool QUnQLiteCursor::last()
  */
 bool QUnQLiteCursor::next()
 {
-    Q_D(QUnQLiteCursor);
     d->setResultCode(unqlite_kv_cursor_next_entry(d->cursor));
     return d->isSuccess();
 }
@@ -131,7 +145,6 @@ bool QUnQLiteCursor::next()
  */
 bool QUnQLiteCursor::previous()
 {
-    Q_D(QUnQLiteCursor);
     d->setResultCode(unqlite_kv_cursor_prev_entry(d->cursor));
     return d->isSuccess();
 }
@@ -143,7 +156,6 @@ bool QUnQLiteCursor::previous()
  */
 QByteArray QUnQLiteCursor::key()
 {
-    Q_D(QUnQLiteCursor);
     int length;
     d->setResultCode(unqlite_kv_cursor_key(d->cursor,
                                            NULL, &length));
@@ -163,7 +175,6 @@ QByteArray QUnQLiteCursor::key()
  */
 QByteArray QUnQLiteCursor::value()
 {
-    Q_D(QUnQLiteCursor);
     qint64 length;
     d->setResultCode(unqlite_kv_cursor_data(d->cursor,
                                             NULL, &length));
@@ -181,19 +192,11 @@ QByteArray QUnQLiteCursor::value()
  */
 bool QUnQLiteCursor::isValid() const
 {
-    Q_D(const QUnQLiteCursor);
     return unqlite_kv_cursor_valid_entry(d->cursor) == 1;
 }
 
-
-void QUnQLiteCursorPrivate::setResultCode(int rc)
+void QUnQLiteCursor::operator ++()
 {
-    q_unqlite->d_func()->setResultCode(rc);
-}
-
-bool QUnQLiteCursorPrivate::isSuccess() const
-{
-    return q_unqlite->d_func()->isSuccess();
 }
 
 /*!
@@ -224,3 +227,9 @@ bool QUnQLiteCursorPrivate::isSuccess() const
  *
  * If the database contains no keys greater than given key, the cursor is left at EOF.
  */
+
+
+void operator ++(QUnQLiteCursor &cursor)
+{
+    cursor.next();
+}

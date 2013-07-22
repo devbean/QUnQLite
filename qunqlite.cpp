@@ -24,8 +24,29 @@
  */
 
 #include "qunqlite.h"
-#include "qunqlite_p.h"
 #include "qunqlitecursor.h"
+
+class QUnQLite::Private
+{
+public:
+    Private(QUnQLite * q_ptr) : q(q_ptr) {}
+
+    void setResultCode(int rc)
+    {
+        resultCode = static_cast<QUnQLite::ResultCode>(rc);
+    }
+
+    bool isSuccess() const
+    {
+        return resultCode == QUnQLite::Ok;
+    }
+
+    QUnQLite::ResultCode resultCode;
+    unqlite *db;
+
+private:
+    Q_POINTER(QUnQLite)
+};
 
 /*!
  * \class QUnQLite
@@ -41,7 +62,8 @@
 /*!
  * \brief Constructs an instance of QUnQLite.
  */
-QUnQLite::QUnQLite()
+QUnQLite::QUnQLite() :
+    d(this)
 {
 }
 
@@ -57,7 +79,6 @@ QUnQLite::~QUnQLite()
  */
 QUnQLite::ResultCode QUnQLite::lastErrorCode() const
 {
-    Q_D(const QUnQLite);
     return d->resultCode;
 }
 
@@ -81,7 +102,6 @@ QUnQLite::ResultCode QUnQLite::lastErrorCode() const
  */
 bool QUnQLite::open(const QString &name, OpenMode mode)
 {
-    Q_D(QUnQLite);
     d->setResultCode(unqlite_open(&d->db, name.toUtf8().constData(), mode));
     return d->isSuccess();
 }
@@ -98,7 +118,6 @@ bool QUnQLite::open(const QString &name, OpenMode mode)
  */
 bool QUnQLite::close()
 {
-    Q_D(QUnQLite);
     d->setResultCode(unqlite_close(d->db));
     return d->isSuccess();
 }
@@ -114,7 +133,6 @@ bool QUnQLite::close()
  */
 bool QUnQLite::append(const QString &key, const QString &value)
 {
-    Q_D(QUnQLite);
     d->setResultCode(unqlite_kv_append(d->db,
                                        key.toUtf8().constData(), key.size(),
                                        value.toUtf8().constData(), value.size()));
@@ -132,7 +150,6 @@ bool QUnQLite::append(const QString &key, const QString &value)
  */
 bool QUnQLite::store(const QString &key, const QString &value)
 {
-    Q_D(QUnQLite);
     d->setResultCode(unqlite_kv_store(d->db,
                                       key.toUtf8().constData(), key.size(),
                                       value.toUtf8().constData(), value.size()));
@@ -147,7 +164,6 @@ bool QUnQLite::store(const QString &key, const QString &value)
  */
 QByteArray QUnQLite::fetch(const QString &key)
 {
-    Q_D(QUnQLite);
     qint64 length;
     d->setResultCode(unqlite_kv_fetch(d->db,
                                       key.toUtf8().constData(), key.size(),
@@ -170,7 +186,6 @@ QByteArray QUnQLite::fetch(const QString &key)
  */
 bool QUnQLite::remove(const QString &key)
 {
-    Q_D(QUnQLite);
     d->setResultCode(unqlite_kv_delete(d->db,
                                        key.toUtf8().constData(), key.size()));
     return d->isSuccess();
@@ -195,7 +210,6 @@ QUnQLiteCursor * QUnQLite::cursor() const
  */
 bool QUnQLite::begin()
 {
-    Q_D(QUnQLite);
     d->setResultCode(unqlite_begin(d->db));
     return d->isSuccess();
 }
@@ -218,7 +232,6 @@ bool QUnQLite::begin()
  */
 bool QUnQLite::commit()
 {
-    Q_D(QUnQLite);
     d->setResultCode(unqlite_commit(d->db));
     return d->isSuccess();
 }
@@ -232,7 +245,6 @@ bool QUnQLite::commit()
  */
 bool QUnQLite::rollback()
 {
-    Q_D(QUnQLite);
     d->setResultCode(unqlite_rollback(d->db));
     return d->isSuccess();
 }
