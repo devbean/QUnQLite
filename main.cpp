@@ -47,5 +47,6 @@ int main(int argc, char *argv[])
 
     unqlite.close();
 
-    return app.quit();
+    app.quit();
+    return 0;
 }
