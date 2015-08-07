@@ -39,38 +39,42 @@ class QUnQLiteCursorPrivate;
 
 class QUnQLiteCursor : public QObject
 {
-    Q_OBJECT
+	Q_OBJECT
 public:
-    enum SeekDirection
-    {
-        ExactMatch = UNQLITE_CURSOR_MATCH_EXACT,
-        Le = UNQLITE_CURSOR_MATCH_LE,
-        Ge = UNQLITE_CURSOR_MATCH_GE
-    };
+	enum SeekDirection
+	{
+		ExactMatch = UNQLITE_CURSOR_MATCH_EXACT,
+		Le = UNQLITE_CURSOR_MATCH_LE,
+		Ge = UNQLITE_CURSOR_MATCH_GE
+	};
 
-    explicit QUnQLiteCursor(QUnQLite *db);
-    ~QUnQLiteCursor();
+	explicit QUnQLiteCursor(QUnQLite *db);
+	~QUnQLiteCursor();
 
-    bool reset();
+	bool reset();
 
-    bool seek(const QString &key, SeekDirection sd);
-    bool first();
-    bool last();
+	bool seek(const QString &key, SeekDirection sd);
 
-    bool next();
-    bool previous();
+	bool first();
+	bool last();
 
-    QByteArray key();
-    QByteArray value();
+	bool next();
+	bool previous();
 
-    bool isValid() const;
+	QString key();
+	QByteArray value();
+	QString valueText();
 
-    void operator ++();
+	bool isValid() const;
+
+	void operator ++();
 
 private:
-    D_POINTER
+	D_POINTER
 
-    friend void operator ++(QUnQLiteCursor &cursor);
+	friend void operator ++(QUnQLiteCursor &cursor);
+
+	QByteArray searchKey;
 };
 
 void operator ++(QUnQLiteCursor &cursor);
