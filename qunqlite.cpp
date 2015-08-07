@@ -119,7 +119,7 @@ bool QUnQLite::open(const QString &name, OpenMode mode)
 bool QUnQLite::close()
 {
     d->setResultCode(unqlite_close(d->db));
-    return d->isSuccess();
+	return d->isSuccess();
 }
 
 /*!
@@ -131,29 +131,33 @@ bool QUnQLite::close()
  *
  * \return True if success.
  */
-bool QUnQLite::append(const QString &key, const QString &value)
+bool QUnQLite::append(const QString& key, const QByteArray& value)
 {
-    d->setResultCode(unqlite_kv_append(d->db,
-                                       key.toUtf8().constData(), key.size(),
-                                       value.toUtf8().constData(), value.size()));
-    return d->isSuccess();
+	const QByteArray baKey = key.toUtf8();
+
+	d->setResultCode(unqlite_kv_append(d->db,
+									   baKey.constData(), baKey.size(),
+									   value.constData(), value.size()));
+	return d->isSuccess();
 }
 
 /*!
  * \brief Write a new record \a value with \a key into the database.
  *
- * If the record does not exists, it is created. Otherwise, it is replaced.
- * That is, the new data overwrite the old data.
- * You can switch to \c append() for an append operation.
+ * If the record does not exists, it is created. Otherwise, the new data chunk
+ * is appended to the end of the old chunk.
+ * You can switch to \c store() for an overwrite operation.
  *
  * \return True if success.
  */
-bool QUnQLite::store(const QString &key, const QString &value)
+bool QUnQLite::store(const QString& key, const QByteArray& value)
 {
-    d->setResultCode(unqlite_kv_store(d->db,
-                                      key.toUtf8().constData(), key.size(),
-                                      value.toUtf8().constData(), value.size()));
-    return d->isSuccess();
+	const QByteArray baKey = key.toUtf8();
+
+	d->setResultCode(unqlite_kv_store(d->db,
+									  baKey.constData(), baKey.size(),
+									  value.constData(), value.size()));
+	return d->isSuccess();
 }
 
 /*!
@@ -165,13 +169,15 @@ bool QUnQLite::store(const QString &key, const QString &value)
 QByteArray QUnQLite::fetch(const QString &key)
 {
     qint64 length;
+	const QByteArray baKey = key.toUtf8();
+
     d->setResultCode(unqlite_kv_fetch(d->db,
-                                      key.toUtf8().constData(), key.size(),
+									  baKey.constData(), baKey.size(),
                                       NULL, &length));
     if(d->isSuccess()) {
         QByteArray record(length, 0);
         d->setResultCode(unqlite_kv_fetch(d->db,
-                                          key.toUtf8().constData(), key.size(),
+										  baKey.constData(), baKey.size(),
                                           record.data(), &length));
         return record;
     }
@@ -184,10 +190,11 @@ QByteArray QUnQLite::fetch(const QString &key)
  *
  * \return True if success.
  */
-bool QUnQLite::remove(const QString &key)
+bool QUnQLite::remove(const QString& key)
 {
+	const QByteArray baKey = key.toUtf8();
     d->setResultCode(unqlite_kv_delete(d->db,
-                                       key.toUtf8().constData(), key.size()));
+									   baKey.constData(), baKey.size()));
     return d->isSuccess();
 }
 
