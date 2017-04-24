@@ -86,12 +86,17 @@ public:
     bool open(const QString &name, OpenMode mode);
     bool close();
 
-    bool append(const QString &key, const QString &value);
-    bool store(const QString &key, const QString &value);
+	bool append(const QString &key, const QByteArray &value);
+	inline bool append(const QString &key, const QString &value)
+	{ return append(key, value.toUtf8()); }
 
-    QByteArray fetch(const QString &key);
+	bool store(const QString &key, const QByteArray &value);
+	inline bool store(const QString &key, const QString &value)
+	{ return store(key, value.toUtf8()); }
 
-    bool remove(const QString &key);
+	QByteArray fetch(const QString &key);
+
+	bool remove(const QString &key);
 
     QUnQLiteCursor * cursor() const;
 
